@@ -5082,7 +5082,11 @@ if Data.ColorPicker then
     end
 
     ColorBtn:Connect("MouseButton1Down", openPicker)
-    PaletteIcon:Connect("MouseButton1Click", openPicker)
+PaletteIcon:Connect("InputBegan", function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+        openPicker()
+    end
+end)
 
     Items["ColorBtn"] = ColorBtn
     Items["PaletteIcon"] = PaletteIcon
