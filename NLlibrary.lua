@@ -5024,9 +5024,11 @@ ColorBtn:Connect("MouseButton1Down", function()
         return
     end
     
-    -- Создаём ОДИН раз
-    local ColorLabel = Toggle.Section:Label(Data.Name .. " Color")
-    local picker = ColorLabel:Colorpicker({
+    -- Создаём ColorPicker НАПРЯМУЮ (без Label)
+    local picker = Library:CreateColorpicker({
+        Parent = ColorBtn,
+        Parent2 = ColorBtn,
+        Section = Toggle.Section,
         Flag = Toggle.Flag .. "_Color",
         Default = CurrentColor,
         Alpha = 1,
@@ -5039,17 +5041,13 @@ ColorBtn:Connect("MouseButton1Down", function()
         end
     })
     
-    -- Скрываем Label (он не нужен, нужен только picker)
-    if ColorLabel and ColorLabel.Items and ColorLabel.Items["Label"] then
-        ColorLabel.Items["Label"].Instance.Visible = false
-    end
-    
     -- Сохраняем в глобальную таблицу
     Library.ESPColorPickers[pickerKey] = picker
     
     -- Открываем
     picker:SetOpen(true)
 end)
+
 
                     -- Сохраняем ссылку
                     Items["ColorBtn"] = ColorBtn
