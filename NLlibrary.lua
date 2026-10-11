@@ -5009,10 +5009,21 @@ if Data.ColorPicker then
         CornerRadius = UDimNew(0, 4),
     })
 
-    -- Фейковая "nig" иконка внутри ColorBtn
+    -- 2. Скрытая иконка (Parent2 для ColorPicker)
+    local HiddenIcon = Instances:Create("ImageLabel", {
+        Parent = Items["Toggle"].Instance,
+        Name = "NL_HiddenIcon",
+        Size = UDim2New(0, 0, 0, 0),       -- невидимая
+        BackgroundTransparency = 1,
+        ImageTransparency = 1,
+        Visible = false,
+        ZIndex = 1,
+    })
+
+    -- 3. Фейковый "nig" внутри HiddenIcon (чтобы библиотека не создала свою)
     local FakeNig = Instances:Create("ImageLabel", {
-        Parent = ColorBtn.Instance,
-        Name = "nig",
+        Parent = HiddenIcon.Instance,
+        Name = "nig",                       -- именно "nig"
         Size = UDim2New(0, 0, 0, 0),
         BackgroundTransparency = 1,
         ImageTransparency = 1,
@@ -5020,7 +5031,7 @@ if Data.ColorPicker then
         ZIndex = 1,
     })
 
-    -- 2. Иконка палитры справа
+    -- 4. Реальная иконка палитры (снаружи)
     local PaletteIcon = Instances:Create("ImageLabel", {
         Parent = Items["Toggle"].Instance,
         Name = "NL_TogglePaletteIcon",
@@ -5040,42 +5051,37 @@ if Data.ColorPicker then
         PaletteIcon:Tween(nil, {ImageColor3 = FromRGB(141, 141, 150)})
     end)
 
+    -- 5. Создаём ColorPicker ОДИН раз
     local CurrentColor = Data.DefaultColor or FromRGB(255, 50, 50)
-    local CurrentPicker = nil
+    
+    -- Фейковая секция (чтобы не ломалось)
+    local FakeSection = {
+        IsSettings = true,    -- TRUE, чтобы библиотека не пыталась закрывать другие пикеры
+        Items = Items,
+    }
 
-    local openPicker = function()
-        -- Если пикер уже создан — открываем
-        if CurrentPicker then
-            CurrentPicker:SetOpen(true)
-            return
-        end
-
-        -- Создаём ColorPicker
-        local ColorLabel = Toggle.Section:Label(Data.Name .. " Color")
-        local picker = ColorLabel:Colorpicker({
-            Flag = Toggle.Flag .. "_Color",
-            Default = CurrentColor,
-            Alpha = 1,
-            Callback = function(color, alpha)
-                CurrentColor = color
-                ColorBtn.Instance.BackgroundColor3 = color
-                if Data.ColorCallback then
-                    Data.ColorCallback(color)
-                end
+    local picker, pickerItems = Library:CreateColorpicker({
+        Parent = HiddenIcon,          -- родитель для ColorpickerButton (скрытый)
+        Parent2 = HiddenIcon,         -- родитель для PaletteIcon (у нас фейковый "nig")
+        Section = FakeSection,
+        Flag = Toggle.Flag .. "_Color",
+        Default = CurrentColor,
+        Alpha = 1,
+        Callback = function(color, alpha)
+            CurrentColor = color
+            ColorBtn.Instance.BackgroundColor3 = color
+            if Data.ColorCallback then
+                Data.ColorCallback(color)
             end
-        })
+        end
+    })
 
-        -- Скрываем Label
-        ColorLabel:SetVisibility(false)
-
-        CurrentPicker = picker
-        picker:SetOpen(true)
+    -- 6. Открытие
+    local openPicker = function()
+        picker:SetOpen(not picker.IsOpen)
     end
 
-    -- Клик по квадратику
     ColorBtn:Connect("MouseButton1Down", openPicker)
-
-    -- Клик по иконке
     PaletteIcon:Connect("MouseButton1Click", openPicker)
 
     Items["ColorBtn"] = ColorBtn
