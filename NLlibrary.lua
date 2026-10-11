@@ -1873,6 +1873,28 @@ local Library do
                 Colorpicker:Set(Value, Alpha)
             end
 
+											-- Глобальный обработчик клика вне палитры
+Library:Connect(UserInputService.InputBegan, function(Input)
+    if Input.UserInputType ~= Enum.UserInputType.MouseButton1 and Input.UserInputType ~= Enum.UserInputType.Touch then
+        return
+    end
+    
+    if not Colorpicker.IsOpen then return end
+    
+    -- Проверяем, был ли клик по палитре
+    if Library:IsMouseOverFrame(Items["ColorpickerWindow"]) then
+        return
+    end
+    
+    -- Проверяем, был ли клик по иконке палитры (PaletteIcon) или ColorBtn
+    if Items["PaletteIcon"] and Library:IsMouseOverFrame(Items["PaletteIcon"]) then
+        return
+    end
+    
+    -- Закрываем
+    Colorpicker:SetOpen(false)
+end)
+
             return Colorpicker, Items 
         end
 
@@ -5060,26 +5082,46 @@ if Data.ColorPicker then
         Items = Items,
     }
 
-    local picker, pickerItems = Library:CreateColorpicker({
-        Parent = HiddenIcon,          -- родитель для ColorpickerButton (скрытый)
-        Parent2 = HiddenIcon,         -- родитель для PaletteIcon (у нас фейковый "nig")
-        Section = FakeSection,
-        Flag = Toggle.Flag .. "_Color",
-        Default = CurrentColor,
-        Alpha = 1,
-        Callback = function(color, alpha)
-            CurrentColor = color
-            ColorBtn.Instance.BackgroundColor3 = color
-            if Data.ColorCallback then
-                Data.ColorCallback(color)
+-- Фейковая секция (IsSettings = FALSE, чтобы ColorPicker закрывался при клике вне)
+local FakeSection = {
+    IsSettings = false,
+    Items = Items,
+}
+
+local picker, pickerItems = Library:CreateColorpicker({
+    Parent = HiddenIcon,
+    Parent2 = HiddenIcon,
+    Section = FakeSection,
+    Flag = Toggle.Flag .. "_Color",
+    Default = CurrentColor,
+    Alpha = 1,
+    Callback = function(color, alpha)
+        CurrentColor = color
+        ColorBtn.Instance.BackgroundColor3 = color
+        if Data.ColorCallback then
+            Data.ColorCallback(color)
+        end
+    end
+})
+
+-- Открытие
+local openPicker = function()
+    local willOpen = not picker.IsOpen
+    picker:SetOpen(willOpen)
+    
+    if willOpen then
+        -- Закрываем другие открытые ColorPicker'ы
+        for _, otherPicker in pairs(Library.ESPColorPickers or {}) do
+            if otherPicker ~= picker and otherPicker.IsOpen then
+                otherPicker:SetOpen(false)
             end
         end
-    })
-
-    -- 6. Открытие
-    local openPicker = function()
-        picker:SetOpen(not picker.IsOpen)
     end
+end
+
+-- Сохраняем в глобальную таблицу (для закрытия других)
+Library.ESPColorPickers = Library.ESPColorPickers or {}
+Library.ESPColorPickers[Toggle.Flag] = picker
 
     ColorBtn:Connect("MouseButton1Down", openPicker)
 PaletteIcon:Connect("InputBegan", function(Input)
