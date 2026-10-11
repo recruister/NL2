@@ -4994,8 +4994,8 @@ if Data.ColorPicker then
     local ColorBtn = Instances:Create("TextButton", {
         Parent = Items["Toggle"].Instance,
         Name = "NL_ToggleColorBtn",
-        Size = UDim2New(0, 18, 0, 18),                -- 18×18
-        Position = UDim2New(1, -50, 0.5, -9),          -- левее, чтобы иконка влезла
+        Size = UDim2New(0, 18, 0, 18),
+        Position = UDim2New(1, -50, 0.5, -9),
         BackgroundColor3 = Data.DefaultColor or FromRGB(255, 50, 50),
         BorderSizePixel = 0,
         Text = "",
@@ -5009,31 +5009,30 @@ if Data.ColorPicker then
         CornerRadius = UDimNew(0, 4),
     })
 
-    -- Фейковая "nig" иконка внутри ColorBtn (чтобы библиотека не создавала свою)
+    -- Фейковая "nig" иконка внутри ColorBtn
     local FakeNig = Instances:Create("ImageLabel", {
         Parent = ColorBtn.Instance,
-        Name = "nig",                                  -- именно "nig"
-        Size = UDim2New(0, 0, 0, 0),                    -- 0×0, невидимая
+        Name = "nig",
+        Size = UDim2New(0, 0, 0, 0),
         BackgroundTransparency = 1,
         ImageTransparency = 1,
         Visible = false,
         ZIndex = 1,
     })
 
-    -- 2. Реальная иконка палитры СПРАВА от квадратика
+    -- 2. Иконка палитры справа
     local PaletteIcon = Instances:Create("ImageLabel", {
         Parent = Items["Toggle"].Instance,
         Name = "NL_TogglePaletteIcon",
         Size = UDim2New(0, 14, 0, 14),
-        Position = UDim2New(1, -28, 0.5, -7),           -- справа
-        Image = "rbxassetid://92464809279921",           -- иконка палитры
+        Position = UDim2New(1, -28, 0.5, -7),
+        Image = "rbxassetid://92464809279921",
         ImageColor3 = FromRGB(141, 141, 150),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ZIndex = 4,
     })
 
-    -- Hover иконки
     PaletteIcon:OnHover(function()
         PaletteIcon:Tween(nil, {ImageColor3 = Library.Theme.Accent})
     end)
@@ -5041,26 +5040,19 @@ if Data.ColorPicker then
         PaletteIcon:Tween(nil, {ImageColor3 = FromRGB(141, 141, 150)})
     end)
 
-    -- Цвет по умолчанию
     local CurrentColor = Data.DefaultColor or FromRGB(255, 50, 50)
-
-    -- Глобальное хранилище
-    Library.ESPColorPickers = Library.ESPColorPickers or {}
+    local CurrentPicker = nil
 
     local openPicker = function()
-        local pickerKey = Toggle.Flag
-
-        -- Если уже есть — открываем
-        if Library.ESPColorPickers[pickerKey] then
-            Library.ESPColorPickers[pickerKey]:SetOpen(true)
+        -- Если пикер уже создан — открываем
+        if CurrentPicker then
+            CurrentPicker:SetOpen(true)
             return
         end
 
-        -- Создаём ColorPicker напрямую
-        local picker = Library:CreateColorpicker({
-            Parent = ColorBtn,
-            Parent2 = ColorBtn,                         -- теперь тут есть "nig" (фейковый)
-            Section = Toggle.Section,
+        -- Создаём ColorPicker
+        local ColorLabel = Toggle.Section:Label(Data.Name .. " Color")
+        local picker = ColorLabel:Colorpicker({
             Flag = Toggle.Flag .. "_Color",
             Default = CurrentColor,
             Alpha = 1,
@@ -5073,17 +5065,19 @@ if Data.ColorPicker then
             end
         })
 
-        Library.ESPColorPickers[pickerKey] = picker
+        -- Скрываем Label
+        ColorLabel:SetVisibility(false)
+
+        CurrentPicker = picker
         picker:SetOpen(true)
     end
 
     -- Клик по квадратику
     ColorBtn:Connect("MouseButton1Down", openPicker)
 
-    -- Клик по иконке палитры = клик по квадратику
-    PaletteIcon:Connect("MouseButton1Down", openPicker)
+    -- Клик по иконке
+    PaletteIcon:Connect("MouseButton1Click", openPicker)
 
-    -- Сохраняем ссылки
     Items["ColorBtn"] = ColorBtn
     Items["PaletteIcon"] = PaletteIcon
 end
