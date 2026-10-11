@@ -5041,18 +5041,6 @@ if Data.ColorPicker then
         Visible = false,
         ZIndex = 1,
     })
-
-    -- 3. Фейковый "nig" внутри HiddenIcon (чтобы библиотека не создала свою)
-    local FakeNig = Instances:Create("ImageLabel", {
-        Parent = HiddenIcon.Instance,
-        Name = "nig",                       -- именно "nig"
-        Size = UDim2New(0, 0, 0, 0),
-        BackgroundTransparency = 1,
-        ImageTransparency = 1,
-        Visible = false,
-        ZIndex = 1,
-    })
-
     -- 4. Реальная иконка палитры (снаружи)
     local PaletteIcon = Instances:Create("ImageLabel", {
         Parent = Items["Toggle"].Instance,
