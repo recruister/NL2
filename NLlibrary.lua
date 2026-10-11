@@ -4991,17 +4991,43 @@ print("[NL Patch] Клик на InfoBlock → настройки OK")
 
                 -- ═══ КВАДРАТИК ЦВЕТА (если передан ColorPicker) ═══
                 if Data.ColorPicker then
-                    local ColorBtn = Instances:Create("TextButton", {
-                        Parent = Items["Toggle"].Instance,
-                        Name = "NL_ToggleColorBtn",
-                        Size = UDim2New(0, 22, 0, 14),
-                        Position = UDim2New(1, -30, 0.5, -7),  -- справа от toggle
-                        BackgroundColor3 = Data.DefaultColor or FromRGB(255, 50, 50),
-                        BorderSizePixel = 0,
-                        Text = "",
-                        AutoButtonColor = false,
-                        ZIndex = 3,
-                    })
+local ColorBtn = Instances:Create("TextButton", {
+    Parent = Items["Toggle"].Instance,
+    Name = "NL_ToggleColorBtn",
+    Size = UDim2New(0, 18, 0, 18),                -- ← КВАДРАТИК 18×18
+    Position = UDim2New(1, -50, 0.5, -9),         -- ← левее (было -30)
+    BackgroundColor3 = Data.DefaultColor or FromRGB(255, 50, 50),
+    BorderSizePixel = 0,
+    Text = "",
+    AutoButtonColor = false,
+    ZIndex = 3,
+})
+
+-- Иконка палитры СНАРУЖИ квадратика (справа)
+local PaletteIcon = Instances:Create("ImageLabel", {
+    Parent = Items["Toggle"].Instance,
+    Name = "NL_TogglePaletteIcon",
+    Size = UDim2New(0, 14, 0, 14),
+    Position = UDim2New(1, -28, 0.5, -7),         -- ← справа от квадратика
+    Image = "rbxassetid://92464809279921",         -- та же иконка палитры
+    ImageColor3 = FromRGB(141, 141, 150),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    ZIndex = 4,
+})
+
+-- Клик по иконке = клик по квадратику
+PaletteIcon:Connect("MouseButton1Down", function()
+    ColorBtn:Fire("MouseButton1Down")  -- эмулируем клик по ColorBtn
+end)
+
+-- Hover эффект
+PaletteIcon:OnHover(function()
+    PaletteIcon:Tween(nil, {ImageColor3 = Library.Theme.Accent})
+end)
+PaletteIcon:OnHoverLeave(function()
+    PaletteIcon:Tween(nil, {ImageColor3 = FromRGB(141, 141, 150)})
+end)
 
                     Instances:Create("UICorner", {
                         Parent = ColorBtn.Instance,
@@ -5024,22 +5050,21 @@ ColorBtn:Connect("MouseButton1Down", function()
         return
     end
     
-    -- Создаём ColorPicker НАПРЯМУЮ (без Label)
-    local picker = Library:CreateColorpicker({
-        Parent = ColorBtn,
-        Parent2 = ColorBtn,
-        Section = Toggle.Section,
-        Flag = Toggle.Flag .. "_Color",
-        Default = CurrentColor,
-        Alpha = 1,
-        Callback = function(color, alpha)
-            CurrentColor = color
-            ColorBtn.Instance.BackgroundColor3 = color
-            if Data.ColorCallback then
-                Data.ColorCallback(color)
-            end
+local picker = Library:CreateColorpicker({
+    Parent = {Instance = ColorBtn.Instance},
+    Parent2 = {Instance = PaletteIcon.Instance},  -- ← иконка снаружи
+    Section = Toggle.Section,
+    Flag = Toggle.Flag .. "_Color",
+    Default = CurrentColor,
+    Alpha = 1,
+    Callback = function(color, alpha)
+        CurrentColor = color
+        ColorBtn.Instance.BackgroundColor3 = color
+        if Data.ColorCallback then
+            Data.ColorCallback(color)
         end
-    })
+    end
+})
     
     -- Сохраняем в глобальную таблицу
     Library.ESPColorPickers[pickerKey] = picker
