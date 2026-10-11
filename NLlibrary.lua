@@ -4989,6 +4989,51 @@ print("[NL Patch] Клик на InfoBlock → настройки OK")
                     return RGBSequence{RGBSequenceKeypoint(0, Library.Theme.Accent), RGBSequenceKeypoint(1, Library.Theme.AccentGradient)}
                 end})
 
+                -- ═══ КВАДРАТИК ЦВЕТА (если передан ColorPicker) ═══
+                if Data.ColorPicker then
+                    local ColorBtn = Instances:Create("TextButton", {
+                        Parent = Items["Toggle"].Instance,
+                        Name = "NL_ToggleColorBtn",
+                        Size = UDim2New(0, 22, 0, 14),
+                        Position = UDim2New(1, -30, 0.5, -7),  -- справа от toggle
+                        BackgroundColor3 = Data.DefaultColor or FromRGB(255, 50, 50),
+                        BorderSizePixel = 0,
+                        Text = "",
+                        AutoButtonColor = false,
+                        ZIndex = 3,
+                    })
+
+                    Instances:Create("UICorner", {
+                        Parent = ColorBtn.Instance,
+                        Name = "\0",
+                        CornerRadius = UDimNew(0, 4),
+                    })
+
+                    -- Цвет по умолчанию
+                    local CurrentColor = Data.DefaultColor or FromRGB(255, 50, 50)
+
+                    -- Обработчик клика
+                    ColorBtn:Connect("MouseButton1Down", function()
+                        -- Открываем библиотечный ColorPicker
+                        local ColorLabel = Toggle.Section:Label(Data.Name .. " Color")
+                        local picker = ColorLabel:Colorpicker({
+                            Flag = Toggle.Flag .. "_Color",
+                            Default = CurrentColor,
+                            Alpha = 1,
+                            Callback = function(color, alpha)
+                                CurrentColor = color
+                                ColorBtn.Instance.BackgroundColor3 = color
+                                if Data.ColorCallback then
+                                    Data.ColorCallback(color)
+                                end
+                            end
+                        })
+                    end)
+
+                    -- Сохраняем ссылку
+                    Items["ColorBtn"] = ColorBtn
+                end
+
                 Items["Toggle"]:OnHover(function()
                     Items["Indicator"]:Tween(TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2New(0, 21, 0, 21), Position = UDim2New(0, -3, 0, -3)})
                 end)
