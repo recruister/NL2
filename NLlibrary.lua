@@ -5012,23 +5012,29 @@ print("[NL Patch] Клик на InfoBlock → настройки OK")
                     -- Цвет по умолчанию
                     local CurrentColor = Data.DefaultColor or FromRGB(255, 50, 50)
 
-                    -- Обработчик клика
-                    ColorBtn:Connect("MouseButton1Down", function()
-                        -- Открываем библиотечный ColorPicker
-                        local ColorLabel = Toggle.Section:Label(Data.Name .. " Color")
-                        local picker = ColorLabel:Colorpicker({
-                            Flag = Toggle.Flag .. "_Color",
-                            Default = CurrentColor,
-                            Alpha = 1,
-                            Callback = function(color, alpha)
-                                CurrentColor = color
-                                ColorBtn.Instance.BackgroundColor3 = color
-                                if Data.ColorCallback then
-                                    Data.ColorCallback(color)
-                                end
-                            end
-                        })
-                    end)
+ColorBtn:Connect("MouseButton1Down", function()
+    -- Создаём ОДИН Label при первом клике, потом переиспользуем
+    if not Toggle.ColorLabel then
+        Toggle.ColorLabel = Toggle.Section:Label(Data.Name .. " Color")
+        Toggle.ColorPicker = Toggle.ColorLabel:Colorpicker({
+            Flag = Toggle.Flag .. "_Color",
+            Default = CurrentColor,
+            Alpha = 1,
+            Callback = function(color, alpha)
+                CurrentColor = color
+                ColorBtn.Instance.BackgroundColor3 = color
+                if Data.ColorCallback then
+                    Data.ColorCallback(color)
+                end
+            end
+        })
+        -- Прячем Label (нам нужен только его Colorpicker)
+        Toggle.ColorLabel:SetVisibility(false)
+    end
+    
+    -- Открываем ColorPicker
+    Toggle.ColorPicker:SetOpen(true)
+end)
 
                     -- Сохраняем ссылку
                     Items["ColorBtn"] = ColorBtn
